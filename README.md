@@ -367,7 +367,7 @@ python src/evaluate.py
 
 ## Resultados Finais
 
-### Link Público do LangSmith###
+### Link Público do LangSmith
 https://smith.langchain.com/hub/nandobraga/bug_to_user_story_v2
 
 ### Avaliação Inicial
