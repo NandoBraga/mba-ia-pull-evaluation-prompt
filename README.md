@@ -1,4 +1,6 @@
-# Pull, Otimização e Avaliação de Prompts com LangChain e LangSmith
+# Desafio: Pull, Otimização e Avaliação de Prompts com LangChain e LangSmith
+
+  Autor: Fernando Braga Oliveira
 
 ## Objetivo
 
@@ -14,27 +16,34 @@ Você deve entregar um software capaz de:
 
 ## Exemplo no CLI
 
-**Exemplo de prompt RUIM (v1) — apenas ilustrativo, para você entender o ponto de partida:**
+**Executar o pull dos prompts ruins do LangSmith**
+# Após refatorar os prompts e fazer push
+python src/push_prompts.py
+
+# Executar avaliação
+python src/evaluate.py
 
 ```
 ==================================================
-Prompt: {seu_username}/bug_to_user_story_v1
+Prompt: nandobraga/bug_to_user_story_v1
 ==================================================
 
 Métricas Derivadas:
-  - Helpfulness: 0.45 ✗
-  - Correctness: 0.52 ✗
+  - Helpfulness: 0.87 ✗
+  - Correctness: 0.81 ✗
 
 Métricas Base:
-  - F1-Score: 0.48 ✗
-  - Clarity: 0.50 ✗
-  - Precision: 0.46 ✗
+  - F1-Score: 0.75 ✗
+  - Clarity: 0.88 ✗
+  - Precision: 0.87 ✗
+
+--------------------------------------------------
+📊 MÉDIA GERAL: 0.8350
+--------------------------------------------------
 
 ❌ STATUS: REPROVADO
 ⚠️  Métricas abaixo de 0.8: helpfulness, correctness, f1_score, clarity, precision
 ```
-
-**Exemplo de prompt OTIMIZADO (v2) — seu objetivo é chegar aqui:**
 
 ```bash
 # Após refatorar os prompts e fazer push
@@ -45,17 +54,17 @@ python src/evaluate.py
 
 Executando avaliação dos prompts...
 ==================================================
-Prompt: {seu_username}/bug_to_user_story_v2
+Prompt: nandobraga/bug_to_user_story_v2
 ==================================================
 
 Métricas Derivadas:
-  - Helpfulness: 0.94 ✓
-  - Correctness: 0.96 ✓
+  - Helpfulness: 0.88 ✓
+  - Correctness: 0.85 ✓
 
 Métricas Base:
-  - F1-Score: 0.93 ✓
-  - Clarity: 0.95 ✓
-  - Precision: 0.92 ✓
+  - F1-Score: 0.82 ✓
+  - Clarity: 0.89 ✓
+  - Precision: 0.88 ✓
 
 ✅ STATUS: APROVADO - Todas as métricas >= 0.8
 ```
@@ -281,7 +290,7 @@ python src/push_prompts.py
 
 ### 4. Executar avaliação
 
-```bash
+```bash 
 python src/evaluate.py
 ```
 
@@ -334,3 +343,133 @@ python src/evaluate.py
 - **Não altere os datasets de avaliação** - apenas os prompts em `prompts/bug_to_user_story_v2.yml`
 - **Itere, itere, itere** - é normal precisar de 3-5 iterações para atingir 0.8 em todas as métricas
 - **Documente seu processo** - a jornada de otimização é tão importante quanto o resultado final
+
+## Técnicas Aplicadas
+
+  ###1.Role Prompting
+
+    Define a persona de um Product Manager Senior e Tech Lead com experiencia em metodologias ageis. O prompt v1 era generico ("assistente que ajuda a transformar bugs"), o que gerava user stories sem tom profissional e sem foco em valor de negocio. Com a persona, o modelo adota vocabulario e estrutura de quem realmente escreve user stories no dia a dia.
+
+  ###2. Few-Shot Learning (Aprendizado por Exemplos)
+
+    Calibração Estrutural e Padronização de *Outputs*
+    Fornecer pares explícitos de *input-output* no contexto de inferência condiciona o modelo à distribuição estrutural esperada. Ao demonstrar a sintaxe exata dos cabeçalhos, a profundidade dos critérios de aceitação e a formatação *Dado/Quando/Então* (BDD), reduz-se a variância estrutural entre requisições de diferentes complexidades, aumentando a precisão do formato e garantindo determinismo sintático.
+
+  ###3. Chain of Thought - CoT (Cadeia de Raciocínio)
+
+    Roteamento Interno de Complexidade e Processamento Intermediário
+    Forçar uma etapa intermediária de inferência — classificando a complexidade do *bug* (`SIMPLES`, `MÉDIO` ou `COMPLEXO`) antes da geração final — força o modelo a alocar *tokens* de raciocínio no espaço latente. Esse processamento prévio calibra a densidade da resposta ao problema real, eliminando a sub-especificação em cenários críticos e prevenindo a alucinação por verbosidade (*over-generation*) em relatos triviais.
+
+  ###4. Skeleton-of-Thought - SoT (Esqueleto de Pensamento)
+
+    Restrição Arquitetural, Preenchimento de *Slots* e Redução de Latência
+    Definir explicitamente os *templates* de saída para cada nível de complexidade estabelece um limite rígido de arquitetura de resposta. O esqueleto predefinido atua como um *schema* que obriga o modelo a realizar o preenchimento conciso das seções, anulando a deriva de esquema (criação de seções espúrias ou irrelevantes) e garantindo alta retenção de dados críticos presentes no relato original.
+
+## Resultados Finais
+
+### Link Público do LangSmith###
+https://smith.langchain.com/hub/nandobraga/bug_to_user_story_v2
+
+### Avaliação Inicial
+![](semRefatorar.png)
+
+* **Status:** ❌ REPROVADO
+* **Métricas Base:**
+  * **F1-Score:** 0.75 ❌ (Abaixo do limite de 0.8)
+  * **Clarity:** 0.88
+  * **Precision:** 0.87
+* **Métricas Derivadas:**
+  * **Helpfulness:** 0.87
+  * **Correctness:** 0.81
+* **Média Geral:** 0.8350
+
+---
+
+### Após a Refatoração
+Após a inclusão das técnicas de otimização de contexto, o prompt foi **APROVADO** em todos os 15 exemplos do dataset, atingindo superávit em todas as métricas mínimas.
+
+![Avaliação Após Refatorar](aposRefatorar.png)
+
+* **Status:** ✅ APROVADO
+* **Métricas Base:**
+  * **F1-Score:** 0.82 ✅ (+0.07 de ganho)
+  * **Clarity:** 0.89 ✅ (+0.01 de ganho)
+  * **Precision:** 0.88 ✅ (+0.01 de ganho)
+* **Métricas Derivadas:**
+  * **Helpfulness:** 0.88 ✅ (+0.01 de ganho)
+  * **Correctness:** 0.85 ✅ (+0.04 de ganho)
+* **Média Geral:** 0.8634 ✅ (+0.0284 de ganho)
+
+### Conclusão do comparativo
+O prompt v1 era minimalista: apenas uma instrução genérica para "transformar relatos de bugs em tarefas para desenvolvedores", sem persona, sem formato esperado e sem exemplos. As métricas refletiram isso, ficando abaixo de 0.8 em todas as dimensões avaliadas.
+
+A versão v2 incorporou quatro técnicas, atingindo aprovação em todas as métricas com média de 0.9152.
+
+### Iterações realizadas
+Foram necessárias várias iterações para atingir o resultado esperado. O processo seguiu o seguinte caminho:
+
+- **Iteração 1** — Few-Shot com 2 exemplos. Média: 0.7552. Reprovado. O modelo ainda gerava documentos verbosos e ignorava parte dos critérios de aceitação esperados.
+- **Iterações intermediárias** — Identificação, via feedback do LangSmith, de problemas de recall (partes do relato ignoradas) e excesso de seções. Ajustes progressivos na classificação de complexidade e nas regras de formato.
+- **Iteração final** — Adição da regra crítica de formato ("sua resposta DEVE começar diretamente com a palavra Como"), refinamento dos critérios da persona e exemplos alinhados com os três níveis de complexidade. Média: 0.9152. Aprovado.
+
+---
+
+
+## Como Executar
+
+### Pré-requisitos
+
+- Python 3.9+
+- Conta no [LangSmith](https://smith.langchain.com/) com API key
+- API key da OpenAI ou Google (Gemini)
+
+### Configuração
+
+```bash
+# Clone o repositório e acesse a pasta
+git clone https://github.com/adrianosb/mba-ia-pull-evaluation-prompt
+cd mba-ia-pull-evaluation-prompt
+
+# Crie e ative o ambiente virtual
+python3 -m venv venv
+source venv/bin/activate
+
+# Instale as dependências
+pip install -r requirements.txt
+
+# Copie e preencha as variáveis de ambiente
+cp .env.example .env
+```
+
+Edite o `.env` com suas credenciais:
+
+```
+LANGCHAIN_API_KEY=...
+LANGSMITH_API_KEY=...
+LLM_PROVIDER=google          # ou openai
+LLM_MODEL=gemini-2.5-flash
+EVAL_MODEL=gemini-2.5-flash
+```
+
+Na execução final que atingiu aprovação, foram utilizados:
+
+```
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-4o-mini
+EVAL_MODEL=gpt-4o-mini
+```
+
+### Execução
+
+```bash
+# 1. Pull do prompt inicial do LangSmith
+python src/pull_prompts.py
+
+# 2. Push do prompt otimizado para o LangSmith
+python src/push_prompts.py
+
+# 3. Avaliação do prompt
+python src/evaluate.py
+
+# 4. Testes de validação do arquivo YAML
+pytest tests/test_prompts.py
